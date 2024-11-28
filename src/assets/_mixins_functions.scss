@@ -1,0 +1,40 @@
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* 🤓 MIXINS & FUNCTIONS 🤓 */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/* Convert px to rem */
+@function toRem($value) {
+  $remValue: calc($value / 16) + rem;
+  @return $remValue;
+}
+
+/* Mixins for media queries */
+@mixin responsiveness($size, $orientation: null) {
+  // Карта соответствия размеров экранов и минимальной ширины
+  $breakpoints: (
+    phone-portrait: 320px,
+    phone-landscape: 480px,
+    tablet-portrait: 600px,
+    tablet-landscape: 900px,
+    desktop: 1200px,
+    big-desktop: 1800px
+  );
+
+  // Получаем минимальную ширину для указанного размера
+  $min-width: map-get($breakpoints, $size);
+
+  // Формируем @media выражение
+  $query: '(min-width: #{$min-width})';
+
+  // Добавляем ориентацию, если указана
+  @if $orientation == landscape {
+    $query: $query + ' and (orientation: landscape)';
+  } @else if $orientation == portrait {
+    $query: $query + ' and (orientation: portrait)';
+  }
+
+  // Применяем @media выражение
+  @media #{$query} {
+    @content;
+  }
+}

@@ -1,0 +1,146 @@
+/* Шрифты */
+@import url('https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400..900&family=Metrophobic&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Averia+Libre:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Maven+Pro:wght@400..900&family=Metrophobic&display=swap');
+
+/* Цветовая палитра */
+$UI-color: (
+  admin: #ff0000,
+  auth-bg-1: #2bc3ff,
+  auth-bg-2: #2b83ff,
+  bg-color: #f9f9f9,
+  bg-color-alt: hsl(0, 0%, 26%),
+  bg-color-tertiary: hsl(240, 2%, 12%),
+  btn-bg: #604cc3,
+  btn-bg-active: #80c4e9,
+  btn-bg-hover: #756de7,
+  btn-bg-disabled: #c7c7c7,
+  btn-outline: white,
+  btn-outline-hover: black,
+  btn-text: white,
+  btn-text-hover: black,
+  btn-text-disabled: black,
+  btn-submit-bg: #604cc3,
+  btn-submit-bg-hover: #756de7,
+  btn-submit-bg-disabled: #c7c7c7,
+  btn-submit-outline: white,
+  btn-submit-text: black,
+  btn-submit-text-hover: white,
+  code-bg: black,
+  code-text: white,
+  input-bg: white,
+  input-focus: #604cc3,
+  input-range-track: white,
+  links: #13a0ff,
+  links-hover: #80c4e9,
+  navbar: #604cc3,
+  navbar-link: white,
+  navbar-link-active: white,
+  navbar-link-hover: #80c4e9,
+  navbar-text: white,
+  navbar-text-hover: black,
+  navbar-signout-bg: #2b00ff,
+  navbar-signout-bg-hover: #756de7,
+  navbar-signout-text: white,
+  navbar-signout-text-hover: black,
+  pagination-bg-hover: #604cc3,
+  scrollbar-track: white,
+  scrollbar-thumb: #604cc3,
+  scrollbar-thumb-hover: #80c4e9,
+  selection: #80c4e9,
+  table-border: #604cc3,
+  table-head: #604cc3,
+  table-head-hover: #80c4e9,
+  table-head-text: white,
+  table-head-text-hover: black,
+  table-row: #604cc3,
+  table-row-hover: #80c4e9,
+  table-row-odd: white,
+  table-row-even: #dbdbdb,
+  table-row-text: black,
+  table-row-text-hover: black,
+  text-highlight: black,
+  text-highlight-mark: white,
+  text-highlight-bg: #80c4e9,
+  text-black: black,
+  text-white: white,
+  text-403: red,
+  text-404: red,
+  text-500: red,
+  quote-author: #604cc3,
+  quote-border: #80c4e9,
+  quote-text: #c7c7c7,
+  quote-text-hover: black,
+  form-placeholder: #949494,
+  form-text: black,
+  form-bg: white,
+  form-border: #c7c7c7,
+  form-focus: #604cc3,
+  form-error: red,
+  form-success: green,
+  form-warning: yellow
+);
+
+/* Шрифты */
+$font-family-primary: 'Metrophobic', sans-serif;
+$font-family-secondary: 'Averia Libre', system-ui;
+$font-family-tertiary: 'Open Sans', sans-serif;
+
+/* Размеры шрифтов */
+$font-size-small: 14px;
+$font-size-normal: 16px;
+$font-size-large: 18px;
+
+/* Жирность шрифтов */
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-bold: 600;
+$font-weight-bolder: 700;
+
+/* Ширина линий */
+$line-height-small: 1.4;
+$line-height-normal: 1.5;
+$line-height-large: 1.6;
+
+/* Scrollbar width and border radius */
+$scrollbar-width: 8px;
+$scrollbar-border-radius: 4px;
+
+/* Отступы (margins) */
+$margin-small: toRem(8);
+$margin-medium: toRem(16);
+$margin-large: toRem(24);
+
+/* Границы (Borders) */
+$border-radius-small: 4px;
+$border-radius-medium: 8px;
+$border-radius-large: 12px;
+$border-width: 1px;
+$border-style: solid;
+
+/* Тени (Shadows) */
+$box-shadow-light:
+  0 2px 4px rgba(0, 0, 0, 0.1),
+  0 2px 4px rgba(0, 0, 0, 0.1);
+$box-shadow-medium:
+  0 4px 8px rgba(0, 0, 0, 0.15),
+  0 4px 8px rgba(0, 0, 0, 0.15);
+$box-shadow-dark:
+  0 6px 12px rgba(0, 0, 0, 0.25),
+  0 6px 12px rgba(0, 0, 0, 0.25);
+
+/* Переходы (Transitions) */
+$transition-duration-fast: 0.2s;
+$transition-duration-normal: 0.3s;
+$transition-duration-slow: 0.5s;
+$transition-easing-1: ease-in;
+$transition-easing-2: ease-out;
+$transition-easing-3: ease-in-out;
+$transition-easing-4: linear;
+
+/* Размеры иконок */
+$icon-size-small: toRem(16);
+$icon-size-normal: toRem(24);
+$icon-size-large: toRem(32);
+
+// $bg-color-1: pink;
+// $bg-color-2: red;
