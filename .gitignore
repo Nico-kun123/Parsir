@@ -34,3 +34,4 @@ coverage
 db
 data
 servers.json
+%userprofile%

@@ -21,7 +21,7 @@ export default function makeMessageHead(messageType = 'INFO') {
   } else if (messageType == 'SUCCESS') {
     return `[✅ SUCCESS - ${dateString}]`
   } else if (messageType == 'WARNING') {
-    return `[❗ WARNING - ${dateString}]`
+    return `[🟨 WARNING - ${dateString}]`
   } else {
     return `[📄 INFO - ${dateString}]`
   }

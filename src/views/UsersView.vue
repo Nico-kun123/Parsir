@@ -11,7 +11,7 @@ import PaginationPagePrevious from '@/components/icons/PaginationPagePrevious.vu
 import { useUsersStore } from '@/stores/useUsersStore'
 
 // Импорт плагинов
-import makeMessageHead from '@/plugins/makeMessageHead'
+import makeMessageHead from '@/plugins/makeMessageHead.js'
 
 export default {
   name: 'UsersView',
@@ -42,7 +42,7 @@ export default {
       const end = start + paginationPerPage.value
       return users.value.slice(start, end)
     })
-    const paginationPerPage: Ref<number> = ref(4)
+    const paginationPerPage: Ref<number> = ref(6)
     const pages = computed(() => {
       const start = Math.max(1, currentPage.value - 2)
       const end = Math.min(totalPages.value, currentPage.value + 2)
@@ -194,7 +194,7 @@ export default {
         <tr class="users__header">
           <!-- <th class="users__header__name" @click="sortUsers('id')">ID</th> -->
           <th class="users__header__name" @click="sortUsers('email')">Email</th>
-          <th class="users__header__name" @click="sortUsers('login')">Логин</th>
+          <!-- <th class="users__header__name" @click="sortUsers('login')">Логин</th> -->
           <th class="users__header__name" @click="sortUsers('password')">Пароль</th>
           <th class="users__header__name" @click="sortUsers('isadmin')">Роль</th>
           <th class="users__header__name" @click="sortUsers('regdate')">Дата регистрации</th>
@@ -205,7 +205,7 @@ export default {
       <tbody>
         <tr v-for="user in filteredUsers" :key="user.id" class="users__row">
           <td class="users__row__name">{{ user.email }}</td>
-          <td class="users__row__name">{{ user.login ? user.login : '—' }}</td>
+          <!-- <td class="users__row__name">{{ user.login ? user.login : '—' }}</td> -->
           <td class="users__row__name">{{ user.password }}</td>
           <td class="users__row__name admin" v-if="user.isadmin">{{ 'Администратор' }}</td>
           <td class="users__row__name user" v-else>{{ 'Пользователь' }}</td>

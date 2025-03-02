@@ -9,6 +9,7 @@
     "build-only": "vite build",
     "preview": "vite preview",
     "start:server": "nodemon ./src/server.js",
+    "parse:new": "node ./src/plugins/parseNewData.js",
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
@@ -17,7 +18,7 @@
     "test:e2e:dev": "start-server-and-test 'vite dev --port 4173' http://localhost:4173 'cypress open --e2e'"
   },
   "dependencies": {
-    "axios": "^1.7.7",
+    "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.6",
@@ -25,15 +26,16 @@
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
-    "pinia": "^2.1.7",
-    "puppeteer": "^23.9.0",
+    "npm-check": "^6.0.1",
+    "pinia": "^3.0.1",
+    "puppeteer": "^24.2.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "user-agents": "^1.1.372",
-    "vite-plugin-minify": "^2.0.0",
-    "vite-plugin-purgecss-updated-v5": "^1.2.1",
-    "vue": "^3.4.29",
-    "vue-router": "^4.3.3"
+    "user-agents": "^1.1.451",
+    "vite-plugin-minify": "^2.1.0",
+    "vite-plugin-purgecss-updated-v5": "^1.2.4",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.8.0",

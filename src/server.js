@@ -106,6 +106,69 @@ app.get('/api/get-all-users', async (req, res) => {
   }
 })
 
+// Получение всех категорий товаров
+app.get('/api/getAllCategories', async (req, res) => {
+  const { shopId, categoryId } = req.query
+
+  const queryParams = []
+  let query = 'SELECT * FROM Categories'
+
+  if (shopId) {
+    query += ' WHERE store_id = $1'
+    queryParams.push(shopId)
+
+    if (categoryId) {
+      query += ' AND id = $2'
+      queryParams.push(categoryId)
+    }
+  } else if (categoryId) {
+    query += ' WHERE id = $1'
+    queryParams.push(categoryId)
+  }
+
+  try {
+    const result = await database.query(query, queryParams)
+    res.status(201).json(result.rows)
+  } catch (err) {
+    res.status(500).send(`Ошибка получения списка категорий:\n\t${err.toString()}`)
+  }
+})
+
+app.post('/api/addProduct', async (req, res) => {
+  const { productData } = req.body
+
+  if (!productData) {
+    console.log(`${makeMessageHead('ERROR')} — Данные товара не предоставлены!')`)
+
+    return res.status(400).json({ message: 'Данные продукта не предоставлены.' })
+  }
+
+  const queryParams = [
+    productData.name,
+    parseInt(productData.price),
+    productData.image,
+    productData.url,
+    productData.store_id,
+    productData.category_id,
+    productData.parse_date
+  ]
+  const query =
+    'INSERT INTO PRODUCTS (name, price, image, url, store_id, category_id, parse_date) VALUES ($1, $2, $3, $4, $5, $6, $7)'
+
+  try {
+    const result = await database.query(query, queryParams)
+    console.log(
+      `${makeMessageHead('SUCCESS')} — Новый товар '${productData.name}' (ID=${result.rows[0].id}) успешно добавлен!`
+    )
+    res.status(201).json(result.rows)
+  } catch (err) {
+    console.log(
+      `${makeMessageHead('ERROR')} — Ошибка добавления нового товара:\n\t${err.toString()}`
+    )
+    res.status(500).send(`Ошибка добавления нового товара:\n\t${err.toString()}`)
+  }
+})
+
 // Регистрация пользователя
 app.post('/api/registerUser', async (req, res) => {
   const { email, password } = req.body
