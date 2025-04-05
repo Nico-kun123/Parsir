@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
+import process from 'process'
+
 // Хранилище
 import { useAuthStore } from '@/stores/authTokens'
 
@@ -22,7 +24,7 @@ export default {
 
     const router = useRouter()
 
-    const serverPort = import.meta.env?.SERVER_PORT || 3000
+    const serverPort = process.env.SERVER_PORT || 5500
 
     /**
      * Проверка устройства пользователя.

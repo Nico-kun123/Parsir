@@ -40,6 +40,6 @@
     // "module": "NodeNext",
     "types": ["node"]
   },
-  "include": ["src/plugins/*.js", "src/plugins/*.ts", "src/**/*.ts"]
+  "include": ["src/plugins/*.js", "src/plugins/*.ts", "src/**/*.ts", "src/database.js"]
   // "exclude": ["src/**/__tests__/*"]
 }

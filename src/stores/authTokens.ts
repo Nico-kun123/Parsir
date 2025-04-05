@@ -16,7 +16,7 @@ export const useAuthStore = defineStore('auth', {
      */
     async login(email: string, password: string) {
       try {
-        const { data } = await axios.post('http://localhost:3000/api/loginUser', {
+        const { data } = await axios.post('http://localhost:5500/api/loginUser', {
           email,
           password
         })
@@ -25,7 +25,7 @@ export const useAuthStore = defineStore('auth', {
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
 
         // Получаем роль пользователя и сохраняем ее в localStorage
-        const { data: userRole } = await axios.post('http://localhost:3000/api/get-user-role', {
+        const { data: userRole } = await axios.post('http://localhost:5500/api/get-user-role', {
           email
         })
         localStorage.setItem('userRole', userRole)

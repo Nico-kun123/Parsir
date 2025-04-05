@@ -21,7 +21,7 @@ export default {
       id: number
       login: string
       email: string
-      password: string
+      // password: string
       isadmin: boolean
       regdate: string
       lastlogin: string
@@ -195,7 +195,7 @@ export default {
           <!-- <th class="users__header__name" @click="sortUsers('id')">ID</th> -->
           <th class="users__header__name" @click="sortUsers('email')">Email</th>
           <!-- <th class="users__header__name" @click="sortUsers('login')">Логин</th> -->
-          <th class="users__header__name" @click="sortUsers('password')">Пароль</th>
+          <!-- <th class="users__header__name" @click="sortUsers('password')">Пароль</th> -->
           <th class="users__header__name" @click="sortUsers('isadmin')">Роль</th>
           <th class="users__header__name" @click="sortUsers('regdate')">Дата регистрации</th>
           <th class="users__header__name" @click="sortUsers('lastlogin')">Последний вход</th>
@@ -206,7 +206,7 @@ export default {
         <tr v-for="user in filteredUsers" :key="user.id" class="users__row">
           <td class="users__row__name">{{ user.email }}</td>
           <!-- <td class="users__row__name">{{ user.login ? user.login : '—' }}</td> -->
-          <td class="users__row__name">{{ user.password }}</td>
+          <!-- <td class="users__row__name">{{ user.password }}</td> -->
           <td class="users__row__name admin" v-if="user.isadmin">{{ 'Администратор' }}</td>
           <td class="users__row__name user" v-else>{{ 'Пользователь' }}</td>
           <td class="users__row__name">

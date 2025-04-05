@@ -14,7 +14,7 @@ export const useUsersStore = defineStore('allUsers', {
      */
     async fetchAllUsers() {
       try {
-        const serverPort = import.meta.env?.SERVER_PORT || 3000
+        const serverPort = import.meta.env?.SERVER_PORT || 5500
         const response = await axios.get(`http://localhost:${serverPort}/api/get-all-users`)
         this.users = response.data
       } catch (error) {
