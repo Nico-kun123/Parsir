@@ -1,5 +1,6 @@
 <script lang="ts">
 import { ref } from 'vue'
+import router from '../router'
 
 export default {
   name: 'HomeShopSelect',
@@ -10,21 +11,27 @@ export default {
     const selectedCategory = ref('')
 
     const handleSelection = () => {
-      //   if (selectedShop.value == 'eldorado') {
-      //     if (selectedCategory.value == 'All') {
-      //       window.location.href = '/shop/eldorado'
-      //     } else {
-      //       window.location.href = `/shop/eldorado/${selectedCategory.value}`
-      //     }
-      //   } else if (selectedShop.value == 'ozon') {
-      //     if (selectedCategory.value == 'All') {
-      //       window.location.href = '/shop/ozon'
-      //     } else {
-      //       window.location.href = `/shop/ozon/${selectedCategory.value}`
-      //     }
+      // if (selectedShop.value == 'eldorado') {
+      //   if (selectedCategory.value == 'All') {
+      //     // window.location.href = '/shop/eldorado'
+      //     // router.push({ path: '/products', query: { shop: } })
+      //   } else {
+      //     window.location.href = `/shop/eldorado/${selectedCategory.value}`
       //   }
+      // } else if (selectedShop.value == 'ozon') {
+      //   if (selectedCategory.value == 'All') {
+      //     window.location.href = '/shop/ozon'
+      //   } else {
+      //     window.location.href = `/shop/ozon/${selectedCategory.value}`
+      //   }
+      // }
 
       console.log(selectedShop.value, selectedCategory.value)
+
+      router.push({
+        path: '/products',
+        query: { shop: selectedShop.value, category: selectedCategory.value }
+      })
     }
 
     return { selectedShop, selectedCategory, handleSelection }

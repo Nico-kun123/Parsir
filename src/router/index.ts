@@ -6,7 +6,9 @@ import { useAuthStore } from '../stores/authTokens'
 // Views
 import AuthView from '../views/AuthRegisterView.vue' // Авторизация и регистрация
 import HomeView from '../views/HomeView.vue' // Главная
+import ProductsPage from '../views/ProductsPage.vue'
 import NotFound from '../views/NotFoundView.vue' // Страница 404
+
 // import UsersView from '@/views/UsersView.vue'
 // import { title } from 'process'
 
@@ -43,6 +45,15 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
         title: 'Пользователи системы'
+      }
+    },
+    {
+      path: '/products',
+      name: 'products',
+      component: () => import('../views/ProductsPage.vue'),
+      meta: {
+        requiresAuth: true,
+        title: 'Товары'
       }
     },
     {

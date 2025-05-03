@@ -22,7 +22,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 // Порт
-const PORT = process.env.SERVER_PORT || 3000
+const PORT = 5500
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //* ✨ ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ✨
@@ -184,77 +184,75 @@ app.post('/api/addNewProduct', async (req, res) => {
   const { productData } = req.body
 
   if (!productData) {
-    console.log(`${makeMessageHead('ERROR')} — Данные товара не предоставлены!')`)
+    console.log(`${makeMessageHead('ERROR')} — Данные товара не предоставлены!`)
     return res.status(400).json({ message: 'Данные продукта не предоставлены.' })
   }
 
   try {
-    const query = 'SELECT * FROM PRODUCTS WHERE url = $1'
-    const queryParams = [productData.url]
-    const result = await database.query(query, queryParams)
-    if (result.rows.length > 0) {
+    // Проверяем, существует ли товар
+    const existingProduct = await database.query('SELECT id FROM Products WHERE url = $1', [
+      productData.url
+    ])
+
+    if (existingProduct.rows.length > 0) {
       console.log(
-        `${makeMessageHead()} — Товар ${productData.name} (${productData.url}) уже существует в базе данных!`
+        `${makeMessageHead()} — Товар ${productData.name} (${productData.url}) уже существует, обновляем цену.`
       )
-      return res.status(200).json({ message: 'Товар с таким URL уже существует.' })
+
+      // Обновляем цену (триггер сам добавит запись в ParseLog)
+      await database.query('UPDATE Products SET price = $1, parse_date = $2 WHERE url = $3', [
+        productData.price,
+        productData.parse_date || new Date(),
+        productData.url
+      ])
+
+      return res.status(200).json({ message: 'Цена товара обновлена.' })
+    } else {
+      // Добавляем новый товар (триггер сам добавит запись в ParseLog)
+      const newProduct = await database.query(
+        `INSERT INTO Products (name, price, image, url, store_id, category_id, parse_date)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, // <- Важно: RETURNING id
+        [
+          productData.name,
+          productData.price,
+          productData.image,
+          productData.url,
+          productData.store_id,
+          productData.category_id,
+          new Date()
+        ]
+      )
+
+      console.log(`${makeMessageHead('SUCCESS')} — Товар "${productData.name}" добавлен!`)
+
+      return res.status(200).json(newProduct.rows[0])
     }
   } catch (error) {
-    console.log(
-      `${makeMessageHead('ERROR')} — Ошибка проверки наличия товара в базе данных:\n\t${error.toString()}`
-    )
+    console.error(`${makeMessageHead('ERROR')} — Ошибка при добавлении товара:\n${error}`)
+    return res.status(500).json({ error: 'Ошибка сервера' })
   }
+})
 
-  const queryParams = [
-    productData.name,
-    parseInt(productData.price),
-    productData.image,
-    productData.url,
-    productData.store_id,
-    productData.category_id,
-    productData.parse_date
-  ]
-  const query =
-    'INSERT INTO PRODUCTS (name, price, image, url, store_id, category_id, parse_date) VALUES ($1, $2, $3, $4, $5, $6, $7)'
-
+// Получение истории цен для товара
+app.get('/api/products/:id/price-history', async (req, res) => {
   try {
-    const result = await database.query(query, queryParams)
-    console.log(
-      `${makeMessageHead('SUCCESS')} — Новый товар '${productData.name}' успешно добавлен в базу данных!`
+    const { rows } = await database.query(
+      'SELECT price, parse_date FROM parselog WHERE product_id = $1 ORDER BY parse_date ASC',
+      [req.params.id]
     )
 
-    const productID = result.rows[0].id
-
-    const logData = {
-      product_id: productID,
-      price: parseInt(productData.price),
-      parse_date: productData.parse_date,
-      store_id: productData.store_id
+    // Добавляем проверку на пустой результат
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Price history not found for this product' })
     }
 
-    console.log(logData)
-
-    try {
-      // Выполняем внутренний запрос к API для добавления лога
-      await database.query(
-        'INSERT INTO PRODUCT_LOGS (product_id, price, parse_date, store_id) VALUES ($1, $2, $3, $4)',
-        [productID, parseInt(productData.price), productData.parse_date, productData.store_id]
-      )
-
-      console.log(
-        `${makeMessageHead('SUCCESS')} — Новая запись лога для товара ID=${productID} (store_id=${productData.store_id}) успешно добавлена!`
-      )
-    } catch (error) {
-      console.log(
-        `${makeMessageHead('ERROR')} — Ошибка добавления лога товара:\n\t${error.toString()}`
-      )
-    }
-
-    res.status(201).json(result.rows)
+    res.json(rows)
   } catch (err) {
-    console.log(
-      `${makeMessageHead('ERROR')} — Ошибка добавления нового товара:\n\t${err.toString()}`
-    )
-    res.status(500).send(`Ошибка добавления нового товара:\n\t${err.toString()}`)
+    console.error('Database error:', err)
+    res.status(500).json({
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    })
   }
 })
 
@@ -280,36 +278,63 @@ app.get('/api/getProducts', async (req, res) => {
   }
 })
 
-// TODO: Он типо не нужен пока что
-app.post('/api/addProductLog', async (req, res) => {
-  const { productData } = req.body
-
-  if (!productData) {
-    console.log(`${makeMessageHead('ERROR')} — Данные товара не предоставлены!`)
-    return res.status(400).json({ message: 'Данные продукта не предоставлены.' })
-  }
-
-  const queryParams = [
-    productData.product_id,
-    parseInt(productData.price),
-    productData.parse_date,
-    productData.store_id
-  ]
-
-  const query =
-    'INSERT INTO PRODUCT_LOGS (product_id, price, parse_date, store_id) VALUES ($1, $2, $3, $4)'
-
+app.get('/api/getProductsQuery', async (req, res) => {
+  const { store_id, category_id } = req.query
   try {
-    const result = await database.query(query, queryParams)
-    console.log(
-      `${makeMessageHead('SUCCESS')} — Новая запись лога для товара ID:${productData.product_id} успешно добавлена!`
+    const result = await database.query(
+      'SELECT * FROM PRODUCTS WHERE store_id = $1 AND category_id = $2',
+      [store_id, category_id]
     )
-    res.status(201).json(result.rows)
+    res.status(200).json(result.rows)
   } catch (err) {
-    console.log(`${makeMessageHead('ERROR')} — Ошибка добавления лога товара:\n\t${err.toString()}`)
-    res.status(500).send(`Ошибка добавления лога товара:\n\t${err.toString()}`)
+    res.status(500).send(`Ошибка получения списка товаров:\n\t${err.toString()}`)
   }
 })
+
+// Получение истории цен для товара
+app.get('/api/products/:id/price-history', async (req, res) => {
+  try {
+    const { rows } = await database.query(
+      'SELECT price, parse_date FROM parselog WHERE product_id = $1 ORDER BY parse_date',
+      [req.params.id]
+    )
+    res.json(rows)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+// TODO: Он типо не нужен пока что
+// app.post('/api/addProductLog', async (req, res) => {
+//   const { productData } = req.body
+
+//   if (!productData) {
+//     console.log(`${makeMessageHead('ERROR')} — Данные товара не предоставлены!`)
+//     return res.status(400).json({ message: 'Данные продукта не предоставлены.' })
+//   }
+
+//   const queryParams = [
+//     productData.product_id,
+//     parseInt(productData.price),
+//     productData.parse_date,
+//     productData.store_id
+//   ]
+
+//   const query =
+//     'INSERT INTO PRODUCT_LOGS (product_id, price, parse_date, store_id) VALUES ($1, $2, $3, $4)'
+
+//   try {
+//     const result = await database.query(query, queryParams)
+//     console.log(
+//       `${makeMessageHead('SUCCESS')} — Новая запись лога для товара ID:${productData.product_id} успешно добавлена!`
+//     )
+//     res.status(201).json(result.rows)
+//   } catch (err) {
+//     console.log(`${makeMessageHead('ERROR')} — Ошибка добавления лога товара:\n\t${err.toString()}`)
+//     res.status(500).send(`Ошибка добавления лога товара:\n\t${err.toString()}`)
+//   }
+// })
 
 // Обновление данных товара в базе данных.
 app.post('/api/updateProductData', async (req, res) => {
@@ -336,7 +361,7 @@ app.post('/api/updateProductData', async (req, res) => {
     )
   }
 
-  const queryParams = [parseInt(productData.price), productData.parse_date]
+  const queryParams = [parseInt(productData.price), productData.parse_date, productData.url]
   const query = `UPDATE PRODUCTS SET price = $1, parse_date = $2 WHERE url = $3`
 
   try {

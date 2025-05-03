@@ -24,15 +24,15 @@ const STORE_CONFIG = {
     baseUrl: 'https://www.eldorado.ru',
     selectors: {
       productList: '#listing-container > ul > li',
-      productName: 'div.YV._V > a',
-      productPrice: 'div.YV.bW > div.undefined.L5.N5.qN.sN > span',
-      productImage: 'div.YV.ZV > a > img',
-      productUrl: 'div.YV._V > a',
-      loadMoreButton: '#listing-container > div.rz > button'
+      productName: 'div.elBP.elDP > a',
+      productPrice: 'div.elBP.elFP > div.undefined.elHY.elJY.elvI.elxI > span',
+      productImage: 'div.elBP.elCP > a > img',
+      productUrl: 'div.elBP.elDP > a',
+      loadMoreButton: '#listing-container > div.elxx > button'
     },
     delays: {
-      navigation: { min: 4000, max: 5000 },
-      loadMore: { min: 3000, max: 4000 }
+      navigation: { min: 10000, max: 15000 },
+      loadMore: { min: 5000, max: 8000 }
     }
   },
   ozon: {
@@ -102,180 +102,6 @@ const isProductValid = (product) => {
 async function closePage(page) {
   await page.close()
   pageCounter++
-}
-/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-/**
- * Функция для парсинга новых данных.
- *
- * Последовательность действий:
- * - Переход на страницу категории;
- * - Собираем данные из категории по всем товарам на странице ( название товара, стоимость, ссылка на страницу товара, ссылка на изображение товара);
- * - Добавляем товары в базу данных;
- * - Закрываем страницу. Если все страницы собраны, закрываем браузер.
- *
- * @param {Object} category Данные об одной категории товара (id категории, название категории, ссылка на страницу категории, ID магазина)
- * @returns {Promise<void>}
- */
-const parseNewData = async (category) => {
-  // Открываем новую страницу
-  const page = await browser.newPage()
-
-  // Настраиваем страницу
-  await page.setUserAgent(randomUserAgent())
-  await page.setViewport({ width: 810, height: 900 })
-
-  // Получаем аргументы командной строки
-  const MODE = process.env.npm_config_mode ? process.env.npm_config_mode : null // Извлекаем значение параметра '--mode'
-  console.log(
-    `${makeMessageHead('INFO')} — Парсим данные в режиме '${MODE ? MODE : 'production (по умолчанию)'}'...`
-  )
-
-  // Собираем данные
-  const parsedData = await Promise.all(
-    category.map(async (category) => {
-      console.log(
-        `${makeMessageHead()} — Переход на страницу '${category.name}' (магазин '${await printShopNameByID(category.store_id)}')...`
-      )
-
-      console.log(`${makeMessageHead('INFO')} — Текущий номер категории: ${pageCounter + 1}...`)
-
-      try {
-        await page.goto(`${category.url}`, { waitUntil: 'domcontentloaded' })
-
-        if (MODE === 'debug') {
-          await randomDelay(9999999, 9999999)
-        } else {
-          await randomDelay(3000, 4000)
-        }
-
-        await page.keyboard.press('End')
-
-        // TODO: Можно увеличить кол-во итераций, чтобы больше данных бот собирал 👀
-        for (let i = 0; i < 2; i++) {
-          try {
-            await page
-              .waitForSelector('#listing-container > div.qA > button', { timeout: 5000 })
-              .catch(async () => {
-                console.log(
-                  `${makeMessageHead('WARNING')} — Пробуем обновить UserAgent для страницы '${category.name}' (${category.url})...`
-                )
-                await page.setUserAgent(randomUserAgent())
-                await page.reload()
-              })
-
-            await page.click('#listing-container > div.qA > button')
-            await page.keyboard.press('End')
-            await randomDelay(2000, 3000)
-            await page.keyboard.press('End')
-          } catch (error) {
-            console.log(
-              `${makeMessageHead('WARNING')} — Ошибка при навигации по странице '${category.name}' (${category.url}): ${error.toString()}`
-            )
-          }
-          await page.keyboard.press('End')
-        }
-
-        console.log(`${makeMessageHead()} — Собираем данные из категории '${category.name}'...`)
-
-        // Ждём пока появится селектор для списка товаров
-        await page
-          .waitForSelector('#listing-container > ul', { timeout: 10000 })
-          .catch(async () => {
-            console.log(
-              `${makeMessageHead('WARNING')} — Категория '${category.name}' (магазин '${await printShopNameByID(category.store_id)}') не содержит товаров!`
-            )
-            await page.reload()
-          })
-
-        // Получаем данные о товарах на странице
-        const productData = await page.evaluate(async () => {
-          // Собираем все карточки товаров
-          const cards = document.querySelectorAll('#listing-container > ul > li')
-
-          return [...cards].map((card) => {
-            // Преобразуем каждую карточку в объект с данными
-            const priceElement = card.querySelector('div.VV.ZV > div.undefined.S5.U5.dN.fN > span')
-            const priceText = priceElement ? priceElement.textContent : null
-
-            let price = priceText ? priceText.split('руб')[0].trim() : 'Нет цены'
-            if (price !== 'Нет цены') {
-              price = price.replace(/\s/g, '') // Убираем все пробелы в цене
-            }
-
-            const nameElement = card.querySelector('div.VV.XV > a')
-            const imageElement = card.querySelector('div.VV.WV > a > img')
-            const urlElement = card.querySelector('div.VV.XV > a')
-
-            return {
-              name: nameElement?.textContent.trim() || 'Нет названия',
-              price: +price || -1,
-              image: imageElement?.getAttribute('src')?.trim() || 'Нет картинки',
-              url:
-                'https://www.eldorado.ru/' + urlElement?.getAttribute('href')?.trim() ||
-                'Нет ссылки',
-              store_id: '',
-              category_id: '',
-              parse_date: ''
-            }
-          })
-        })
-
-        // Добавляем данные о магазине и категории в каждый объект
-        productData.forEach((product) => {
-          Object.defineProperties(product, {
-            store_id: {
-              value: category.store_id
-            },
-            category_id: {
-              value: category.id
-            },
-            parse_date: {
-              value: new Date()
-            }
-          })
-        })
-
-        await closePage(page)
-        console.log(`${makeMessageHead()} — Очистка некорректных данных...`)
-
-        return productData
-      } catch (error) {
-        await closePage(page)
-        console.log(
-          `${makeMessageHead('ERROR')} — Ошибка парсинга категории '${category.name}' (магазин '${await printShopNameByID(category.store_id)}'):\n\t${error.toString()}`
-        )
-      }
-    })
-  )
-
-  if (parsedData.flat().length === 0) {
-    console.log(
-      `${makeMessageHead('WARNING')} — Данные со страницы '${category.name}' (магазин '${await printShopNameByID(category.store_id)}') не были собраны! Это может быть связано с тем, что бот был заблокирован.`
-    )
-  } else {
-    console.log(`${makeMessageHead()} — Сохраняем данные в таблицу 'Products'...`)
-
-    const filteredData = parsedData.flat().filter((product) => product.price !== -1)
-
-    filteredData.flat().forEach(async (product) => {
-      if (MODE === 'debug') {
-        console.log(product)
-      } else {
-        await fetch(`http://localhost:${process.env.SERVER_PORT}/api/addNewProduct`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productData: product })
-        })
-      }
-    })
-  }
-
-  await randomDelay(5000, 6000)
-  if (pageCounter >= 50) {
-    console.log(`${makeMessageHead()} — Закрытие браузера...`)
-    await browser.close()
-  }
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -364,9 +190,7 @@ async function parseProducts(page, category, storeConfig) {
           name: card.querySelector(selectors.productName)?.textContent?.trim() || 'Нет названия',
           price: +price || -1,
           image: card.querySelector(selectors.productImage)?.src?.trim() || 'Нет картинки',
-          url:
-            storeConfig.baseUrl + card.querySelector(selectors.productUrl)?.href?.trim() ||
-            'Нет ссылки',
+          url: card.querySelector(selectors.productUrl)?.href?.trim() || 'Нет ссылки',
           store_id: category.store_id,
           category_id: category.id,
           parse_date: new Date().toISOString()
@@ -471,16 +295,16 @@ const eldoradoCategories = await fetch(
 )
 const eldorado = await eldoradoCategories.json()
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-const ozonCategories = await fetch(
-  `http://localhost:${process.env.SERVER_PORT}/api/getAllCategories?store_id=2`
-)
-const ozon = await ozonCategories.json()
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 // Парсинг для Эльдорадо
 await parseNewDataALT(eldorado, 'eldorado')
 
-await randomDelay(15000, 25000)
+// await randomDelay(15000, 25000)
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// const ozonCategories = await fetch(
+//   `http://localhost:${process.env.SERVER_PORT}/api/getAllCategories?store_id=2`
+// )
+// const ozon = await ozonCategories.json()
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
