@@ -75,11 +75,48 @@ export default {
       }
     },
 
+    calculateStats(priceHistory) {
+      if (!priceHistory?.length) return null
+
+      const prices = priceHistory.map((item) => item.price)
+      const current = prices[prices.length - 1]
+      const min = Math.min(...prices)
+      const max = Math.max(...prices)
+      const avg = prices.reduce((a, b) => a + b, 0) / prices.length
+
+      // Вычисляем изменение за 30 дней
+      const last30Days = priceHistory.filter((item) => {
+        const date = new Date(item.parse_date)
+        return date > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      })
+
+      const diff30d =
+        last30Days.length > 1 ? (current - last30Days[0].price) / last30Days[0].price : 0
+
+      // Вычисляем волатильность (стандартное отклонение)
+      const squaredDiffs = prices.map((p) => Math.pow(p - avg, 2))
+      const variance = squaredDiffs.reduce((a, b) => a + b, 0) / prices.length
+      const volatility = (Math.sqrt(variance) / avg) * 100
+
+      return {
+        current,
+        min,
+        max,
+        avg,
+        diff30d,
+        volatility
+      }
+    },
+
     renderOptimizedChart(priceHistory) {
       if (!priceHistory?.length || !this.$refs.chartCanvas) return
 
       const ctx = this.$refs.chartCanvas.getContext('2d')
       if (!ctx) return
+
+      // Рассчитываем статистику
+      const stats = this.calculateStats(priceHistory)
+      this.$emit('stats-ready', stats)
 
       // Оптимизация данных - уменьшаем количество точек
       const optimizedData = this.optimizeChartData(priceHistory)
@@ -96,7 +133,11 @@ export default {
               borderWidth: 1.5,
               pointRadius: 1.5,
               tension: 0.1
-            }
+            },
+            // Добавляем линию тренда
+            this.createTrendLine(optimizedData, stats),
+            // Добавляем маркеры экстремумов
+            this.createExtremesMarkers(optimizedData, stats)
           ]
         },
         options: {
@@ -141,7 +182,7 @@ export default {
       const maxPoints = 30 // Максимальное количество точек для отображения
       if (data.length <= maxPoints) {
         return {
-          labels: data.map((item) => new Date(item.parse_date).toLocaleDateString()),
+          labels: data.map((item) => this.formatDate(item.parse_date)),
           prices: data.map((item) => item.price)
         }
       }
@@ -158,6 +199,56 @@ export default {
       }
 
       return result
+    },
+
+    createTrendLine(data, stats) {
+      const n = data.prices.length
+      let xSum = 0,
+        ySum = 0,
+        xySum = 0,
+        xxSum = 0
+
+      data.prices.forEach((price, index) => {
+        xSum += index
+        ySum += price
+        xySum += index * price
+        xxSum += index * index
+      })
+
+      const slope = (n * xySum - xSum * ySum) / (n * xxSum - xSum * xSum)
+      const intercept = (ySum - slope * xSum) / n
+
+      return {
+        label: 'Тренд',
+        data: data.prices.map((_, i) => slope * i + intercept),
+        borderColor: slope > 0 ? '#28a745' : '#dc3545',
+        borderWidth: 1,
+        borderDash: [5, 5],
+        pointRadius: 0,
+        tension: 0
+      }
+    },
+
+    createExtremesMarkers(data, stats) {
+      return {
+        label: 'Экстремумы',
+        data: data.prices.map((p) =>
+          Math.abs(p - stats.min) < 0.01 || Math.abs(p - stats.max) < 0.01 ? p : null
+        ),
+        pointBackgroundColor: (ctx) =>
+          Math.abs(ctx.raw - stats.min) < 0.01 ? '#28a745' : '#dc3545',
+        pointRadius: 5,
+        showLine: false
+      }
+    },
+
+    // Форматирование даты для подписей
+    formatDate(dateString) {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'short'
+      })
     },
 
     cleanup() {

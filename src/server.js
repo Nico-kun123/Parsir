@@ -66,7 +66,7 @@ function generateToken(user) {
   // })
 
   return jwt.sign({ email: user.email }, import.meta.env?.SECRET_KEY || 'secretKey', {
-    expiresIn: '30m'
+    expiresIn: '1h'
   })
 }
 
@@ -279,13 +279,42 @@ app.get('/api/getProducts', async (req, res) => {
 })
 
 app.get('/api/getProductsQuery', async (req, res) => {
-  const { store_id, category_id } = req.query
+  const { store_name, category_name } = req.query
+
   try {
-    const result = await database.query(
-      'SELECT * FROM PRODUCTS WHERE store_id = $1 AND category_id = $2',
-      [store_id, category_id]
-    )
-    res.status(200).json(result.rows)
+    // Получаем store_id
+    const storeResult = await database.query('SELECT id FROM stores WHERE name = $1', [store_name])
+
+    if (storeResult.rows.length === 0) {
+      return res.status(404).send('Магазин не найден')
+    }
+    const store_id = storeResult.rows[0].id
+
+    let productsResult
+
+    if (category_name.toLowerCase() === 'all') {
+      // Запрос для всех категорий
+      productsResult = await database.query('SELECT * FROM products WHERE store_id = $1', [
+        store_id
+      ])
+    } else {
+      // Получаем category_id и делаем обычный запрос
+      const categoryResult = await database.query('SELECT id FROM categories WHERE name = $1', [
+        category_name
+      ])
+
+      if (categoryResult.rows.length === 0) {
+        return res.status(404).send('Категория не найдена')
+      }
+      const category_id = categoryResult.rows[0].id
+
+      productsResult = await database.query(
+        'SELECT * FROM products WHERE store_id = $1 AND category_id = $2',
+        [store_id, category_id]
+      )
+    }
+
+    res.status(200).json(productsResult.rows)
   } catch (err) {
     res.status(500).send(`Ошибка получения списка товаров:\n\t${err.toString()}`)
   }
